@@ -10,33 +10,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://dy-vm-client.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
+// CORS 설정 - 모든 도메인 허용 (개발용)
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.CLIENT_URL === '*') {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all for now
-    }
-  },
+  origin: true, // 모든 origin 허용
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-JSON'],
+  maxAge: 86400 // 24시간
 }));
 
+// Body parser
 app.use(express.json());
-
-// Handle preflight requests
-app.options('*', cors());
+app.use(express.urlencoded({ extended: true }));
 
 // Root route
 app.get('/', (req, res) => {
