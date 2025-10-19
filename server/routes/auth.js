@@ -1,11 +1,59 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { users } from '../utils/users.js';
 
 const router = express.Router();
 
-// In-memory user storage (replace with database in production)
-const users = new Map();
+// 관리자가 미리 생성한 계정 (예시)
+// 실제로는 관리자 페이지에서 생성하거나 데이터베이스에서 관리
+const predefinedAccounts = [
+  {
+    username: 'student1',
+    email: 'student1@school.com',
+    password: 'password123', // 실제로는 해시된 비밀번호
+    fullName: '학생1',
+    assignedVMs: [100, 101], // 할당된 VM ID 목록
+    role: 'student'
+  },
+  {
+    username: 'student2',
+    email: 'student2@school.com',
+    password: 'password123',
+    fullName: '학생2',
+    assignedVMs: [102],
+    role: 'student'
+  },
+  {
+    username: 'admin',
+    email: 'admin@school.com',
+    password: 'admin123',
+    fullName: '관리자',
+    assignedVMs: [], // 관리자는 모든 VM 접근 가능
+    role: 'admin'
+  }
+];
+
+// 초기화: 미리 정의된 계정을 users Map에 추가
+async function initializePredefinedAccounts() {
+  const bcrypt = await import('bcryptjs');
+  for (const account of predefinedAccounts) {
+    const hashedPassword = await bcrypt.default.hash(account.password, 10);
+    users.set(account.email, {
+      id: Date.now().toString() + Math.random(),
+      username: account.username,
+      email: account.email,
+      fullName: account.fullName,
+      password: hashedPassword,
+      assignedVMs: account.assignedVMs,
+      role: account.role,
+      createdAt: new Date().toISOString()
+    });
+  }
+}
+
+// 서버 시작 시 계정 초기화
+initializePredefinedAccounts();
 
 // Register
 router.post('/register', async (req, res) => {
@@ -46,7 +94,9 @@ router.post('/register', async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName
+        fullName: user.fullName,
+        assignedVMs: user.assignedVMs || [],
+        role: user.role || 'student'
       }
     });
   } catch (error) {
@@ -81,7 +131,9 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName
+        fullName: user.fullName,
+        assignedVMs: user.assignedVMs || [],
+        role: user.role || 'student'
       }
     });
   } catch (error) {
@@ -111,7 +163,9 @@ router.get('/verify', (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName
+        fullName: user.fullName,
+        assignedVMs: user.assignedVMs || [],
+        role: user.role || 'student'
       }
     });
   } catch (error) {

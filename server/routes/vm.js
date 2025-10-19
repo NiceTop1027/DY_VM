@@ -7,12 +7,25 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all VMs
+// Get all VMs (filtered by user's assigned VMs)
 router.get('/', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
-    const vms = await proxmox.getVMs(node);
-    res.json(vms);
+    const allVMs = await proxmox.getVMs(node);
+    
+    // 미들웨어에서 설정된 사용자 정보 사용
+    const userAssignedVMs = req.user.assignedVMs || [];
+    const userRole = req.user.role || 'student';
+    
+    // 관리자는 모든 VM, 일반 사용자는 할당된 VM만
+    let filteredVMs;
+    if (userRole === 'admin') {
+      filteredVMs = allVMs;
+    } else {
+      filteredVMs = allVMs.filter(vm => userAssignedVMs.includes(vm.vmid));
+    }
+    
+    res.json(filteredVMs);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
