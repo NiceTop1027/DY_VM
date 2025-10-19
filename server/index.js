@@ -35,6 +35,9 @@ app.use(cors({
 
 app.use(express.json());
 
+// Handle preflight requests
+app.options('*', cors());
+
 // Root route
 app.get('/', (req, res) => {
   res.json({
