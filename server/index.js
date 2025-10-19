@@ -17,15 +17,38 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Proxmox VM Platform API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      vm: '/api/vm/*',
+      proxmox: '/api/proxmox/*'
+    }
+  });
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    proxmox: {
+      host: process.env.PROXMOX_HOST,
+      port: process.env.PROXMOX_PORT,
+      node: process.env.PROXMOX_NODE
+    }
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/vm', vmRoutes);
 app.use('/api/proxmox', proxmoxRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
-});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
