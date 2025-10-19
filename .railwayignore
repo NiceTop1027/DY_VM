@@ -1,0 +1,9 @@
+# Railway에서 무시할 파일/폴더
+client/
+*.md
+!README.md
+setup.sh
+setup-env.sh
+start.sh
+.git/
+.gitignore

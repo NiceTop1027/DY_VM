@@ -2,7 +2,10 @@
 nixPkgs = ['nodejs_20']
 
 [phases.install]
-cmds = ['npm install']
+cmds = ['npm install --omit=dev']
+
+[phases.build]
+cmds = ['echo "Backend only - skipping build"']
 
 [start]
 cmd = 'node server/index.js'
