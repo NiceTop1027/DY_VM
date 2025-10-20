@@ -13,19 +13,23 @@ import adminRoutes from './routes/admin.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root
+// Load .env from project root (for local development)
 const envPath = path.join(__dirname, '../.env');
-console.log(`Loading .env from: ${envPath}`);
 const result = dotenv.config({ path: envPath });
 
 if (result.error) {
-  console.error('Error loading .env file:', result.error);
+  if (result.error.code === 'ENOENT') {
+    console.log('ℹ️  No .env file found, using environment variables from Railway');
+  } else {
+    console.error('Error loading .env file:', result.error);
+  }
 } else {
   console.log('✅ .env file loaded successfully');
-  console.log(`PROXMOX_MOCK=${process.env.PROXMOX_MOCK}`);
-  console.log(`PROXMOX_HOST=${process.env.PROXMOX_HOST}`);
-  console.log(`ADMIN_EMAIL=${process.env.ADMIN_EMAIL}`);
 }
+
+console.log(`PROXMOX_MOCK=${process.env.PROXMOX_MOCK}`);
+console.log(`PROXMOX_HOST=${process.env.PROXMOX_HOST}`);
+console.log(`ADMIN_EMAIL=${process.env.ADMIN_EMAIL}`);
 
 // 환경 변수 로드 후 초기 계정 생성
 initializePredefinedAccounts(bcrypt).catch(console.error);

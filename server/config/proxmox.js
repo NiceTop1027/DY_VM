@@ -5,7 +5,13 @@ class ProxmoxAPI {
   constructor() {
     this.host = process.env.PROXMOX_HOST;
     this.port = process.env.PROXMOX_PORT || 8006;
-    this.baseURL = `https://${this.host}:${this.port}/api2/json`;
+    
+    // ngrok URL은 포트 없이 사용
+    const isNgrok = this.host && this.host.includes('ngrok');
+    this.baseURL = isNgrok 
+      ? `https://${this.host}/api2/json`
+      : `https://${this.host}:${this.port}/api2/json`;
+    
     this.ticket = null;
     this.csrfToken = null;
     
@@ -17,7 +23,7 @@ class ProxmoxAPI {
 
   async authenticate() {
     try {
-      console.log(`Authenticating to Proxmox: ${this.host}:${this.port}`);
+      console.log(`Authenticating to Proxmox: ${this.host}`);
       console.log(`Using user: ${process.env.PROXMOX_USER}`);
       console.log(`Base URL: ${this.baseURL}`);
       
@@ -29,11 +35,7 @@ class ProxmoxAPI {
         },
         { 
           httpsAgent: this.httpsAgent,
-          timeout: 60000, // 60 second timeout for Cloudflare Tunnel
-          headers: {
-            'Connection': 'keep-alive',
-            'Keep-Alive': 'timeout=60'
-          }
+          timeout: 30000
         }
       );
 
@@ -52,13 +54,11 @@ class ProxmoxAPI {
         console.error('Response data:', JSON.stringify(error.response.data));
       } else if (error.request) {
         console.error('No response received from Proxmox server');
-        console.error('Request details:', error.request._header || 'N/A');
       }
       
-      // 더 구체적인 에러 메시지
       let errorMessage = 'Proxmox authentication failed';
       if (error.code === 'ECONNREFUSED') {
-        errorMessage = `Cannot connect to Proxmox server at ${this.host}:${this.port}`;
+        errorMessage = `Cannot connect to Proxmox server`;
       } else if (error.code === 'ETIMEDOUT') {
         errorMessage = `Connection to Proxmox server timed out`;
       } else if (error.code === 'ENOTFOUND') {
