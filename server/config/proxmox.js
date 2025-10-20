@@ -25,53 +25,64 @@ class ProxmoxAPI {
     });
   }
 
-  async authenticate() {
-    try {
-      console.log(`Authenticating to Proxmox: ${this.host}`);
-      console.log(`Using user: ${process.env.PROXMOX_USER}`);
-      console.log(`Base URL: ${this.baseURL}`);
-      
-      const response = await axios.post(
-        `${this.baseURL}/access/ticket`,
-        {
-          username: process.env.PROXMOX_USER,
-          password: process.env.PROXMOX_PASSWORD
-        },
-        { 
-          httpsAgent: this.httpsAgent,
-          timeout: 30000
-        }
-      );
+  async authenticate(retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`Authenticating to Proxmox (attempt ${attempt}/${retries}): ${this.host}`);
+        console.log(`Using user: ${process.env.PROXMOX_USER}`);
+        console.log(`Base URL: ${this.baseURL}`);
+        
+        const response = await axios.post(
+          `${this.baseURL}/access/ticket`,
+          {
+            username: process.env.PROXMOX_USER,
+            password: process.env.PROXMOX_PASSWORD
+          },
+          { 
+            httpsAgent: this.httpsAgent,
+            timeout: 30000
+          }
+        );
 
-      this.ticket = response.data.data.ticket;
-      this.csrfToken = response.data.data.CSRFPreventionToken;
-      
-      console.log('✅ Proxmox authentication successful');
-      return true;
-    } catch (error) {
-      console.error('❌ Proxmox authentication failed');
-      console.error('Error message:', error.message);
-      console.error('Error code:', error.code);
-      
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', JSON.stringify(error.response.data));
-      } else if (error.request) {
-        console.error('No response received from Proxmox server');
+        this.ticket = response.data.data.ticket;
+        this.csrfToken = response.data.data.CSRFPreventionToken;
+        
+        console.log('✅ Proxmox authentication successful');
+        return true;
+      } catch (error) {
+        if (attempt === retries) {
+          // 마지막 시도 실패 시 에러 던지기
+          console.error('❌ Proxmox authentication failed');
+          console.error('Error message:', error.message);
+          console.error('Error code:', error.code);
+          
+          if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', JSON.stringify(error.response.data));
+          } else if (error.request) {
+            console.error('No response received from Proxmox server');
+          }
+          
+          let errorMessage = 'Proxmox authentication failed';
+          if (error.code === 'ECONNREFUSED') {
+            errorMessage = `Cannot connect to Proxmox server`;
+          } else if (error.code === 'ETIMEDOUT') {
+            errorMessage = `Connection to Proxmox server timed out`;
+          } else if (error.code === 'ENOTFOUND') {
+            errorMessage = `Proxmox server hostname not found: ${this.host}`;
+          } else if (error.code === 'ECONNRESET') {
+            errorMessage = `Connection reset by ngrok`;
+          } else if (error.response?.status === 401) {
+            errorMessage = `Invalid Proxmox credentials`;
+          }
+          
+          throw new Error(`${errorMessage}: ${error.message}`);
+        } else {
+          // 재시도 전 대기
+          console.log(`⚠️  Retry in 2 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
       }
-      
-      let errorMessage = 'Proxmox authentication failed';
-      if (error.code === 'ECONNREFUSED') {
-        errorMessage = `Cannot connect to Proxmox server`;
-      } else if (error.code === 'ETIMEDOUT') {
-        errorMessage = `Connection to Proxmox server timed out`;
-      } else if (error.code === 'ENOTFOUND') {
-        errorMessage = `Proxmox server hostname not found: ${this.host}`;
-      } else if (error.response?.status === 401) {
-        errorMessage = `Invalid Proxmox credentials`;
-      }
-      
-      throw new Error(`${errorMessage}: ${error.message}`);
     }
   }
 
