@@ -23,8 +23,7 @@
     "axios": "^1.6.2",
     "https": "^1.0.0",
     "ws": "^8.14.2",
-    "node-fetch": "^3.3.2",
-    "firebase": "^10.7.1"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
