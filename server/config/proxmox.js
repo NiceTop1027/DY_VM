@@ -17,6 +17,9 @@ class ProxmoxAPI {
 
   async authenticate() {
     try {
+      console.log(`Authenticating to Proxmox: ${this.host}:${this.port}`);
+      console.log(`Using user: ${process.env.PROXMOX_USER}`);
+      
       const response = await axios.post(
         `${this.baseURL}/access/ticket`,
         {
@@ -29,10 +32,15 @@ class ProxmoxAPI {
       this.ticket = response.data.data.ticket;
       this.csrfToken = response.data.data.CSRFPreventionToken;
       
+      console.log('✅ Proxmox authentication successful');
       return true;
     } catch (error) {
-      console.error('Proxmox authentication failed:', error.message);
-      return false;
+      console.error('❌ Proxmox authentication failed:', error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      throw new Error(`Proxmox authentication failed: ${error.message}`);
     }
   }
 

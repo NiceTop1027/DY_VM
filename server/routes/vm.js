@@ -11,7 +11,19 @@ router.use(authenticateToken);
 router.get('/', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
+    
+    // Proxmox 연결 확인
+    if (!process.env.PROXMOX_HOST || !process.env.PROXMOX_USER || !process.env.PROXMOX_PASSWORD) {
+      console.error('Proxmox credentials not configured');
+      return res.status(500).json({ 
+        error: 'Proxmox server not configured',
+        details: 'Please configure PROXMOX_HOST, PROXMOX_USER, and PROXMOX_PASSWORD environment variables'
+      });
+    }
+    
+    console.log(`Fetching VMs from Proxmox node: ${node}`);
     const allVMs = await proxmox.getVMs(node);
+    console.log(`Retrieved ${allVMs?.length || 0} VMs from Proxmox`);
     
     // 미들웨어에서 설정된 사용자 정보 사용
     const userAssignedVMs = req.user.assignedVMs || [];
@@ -25,9 +37,15 @@ router.get('/', async (req, res) => {
       filteredVMs = allVMs.filter(vm => userAssignedVMs.includes(vm.vmid));
     }
     
+    console.log(`Returning ${filteredVMs?.length || 0} VMs for user ${req.user.email} (role: ${userRole})`);
     res.json(filteredVMs);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching VMs:', error.message);
+    console.error('Error details:', error.response?.data || error);
+    res.status(500).json({ 
+      error: error.message,
+      details: error.response?.data?.errors || 'Failed to connect to Proxmox server'
+    });
   }
 });
 
