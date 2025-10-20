@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import vmRoutes from './routes/vm.js';
 import proxmoxRoutes from './routes/proxmox.js';
+import adminRoutes from './routes/admin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +44,8 @@ app.get('/api', (req, res) => {
       health: '/api/health',
       auth: '/api/auth/*',
       vm: '/api/vm/*',
-      proxmox: '/api/proxmox/*'
+      proxmox: '/api/proxmox/*',
+      admin: '/api/admin/* (admin only)'
     }
   });
 });
@@ -65,6 +67,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/vm', vmRoutes);
 app.use('/api/proxmox', proxmoxRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve React app for all other routes (SPA fallback)
 app.get('*', (req, res) => {

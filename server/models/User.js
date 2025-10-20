@@ -54,28 +54,10 @@ export const deleteUser = async (id) => {
 export const initializePredefinedAccounts = async (bcrypt) => {
   const predefinedAccounts = [
     {
-      id: 'student1',
-      username: 'student1',
-      email: 'student1@school.com',
-      password: 'password123',
-      fullName: '학생1',
-      assignedVMs: [100, 101],
-      role: 'student'
-    },
-    {
-      id: 'student2',
-      username: 'student2',
-      email: 'student2@school.com',
-      password: 'password123',
-      fullName: '학생2',
-      assignedVMs: [102],
-      role: 'student'
-    },
-    {
       id: 'admin',
       username: 'admin',
-      email: 'admin@school.com',
-      password: 'admin123',
+      email: process.env.ADMIN_EMAIL || 'admin@school.com',
+      password: process.env.ADMIN_PASSWORD || 'admin123',
       fullName: '관리자',
       assignedVMs: [],
       role: 'admin'

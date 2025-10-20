@@ -13,7 +13,8 @@ import {
   LogOut,
   Cpu,
   HardDrive,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react'
 import { getStatusColor, getStatusText, formatBytes } from '../lib/utils'
 
@@ -91,6 +92,12 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-gray-900">{user?.fullName || user?.username}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
+              {user?.role === 'admin' && (
+                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  관리자 패널
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 로그아웃

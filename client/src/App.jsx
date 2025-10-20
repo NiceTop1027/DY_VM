@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import VMConsole from './pages/VMConsole'
+import AdminPanel from './pages/AdminPanel'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -68,6 +69,14 @@ function App() {
             element={
               <PrivateRoute>
                 <VMConsole />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <PrivateRoute>
+                <AdminPanel />
               </PrivateRoute>
             } 
           />
