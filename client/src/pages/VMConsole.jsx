@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
-import { ArrowLeft, Monitor, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Monitor, AlertCircle, Info } from 'lucide-react'
 import axios from 'axios'
 
 export default function VMConsole() {
@@ -12,6 +12,7 @@ export default function VMConsole() {
   const [error, setError] = useState('')
   const [connecting, setConnecting] = useState(true)
   const [vmInfo, setVmInfo] = useState(null)
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {
     connectToConsole()
@@ -39,6 +40,19 @@ export default function VMConsole() {
       })
 
       const { host, port, ticket } = vncResponse.data
+      
+      console.log('VNC Response:', { host, port, ticket })
+
+      // Check if this is mock mode (ticket starts with 'mock-')
+      if (ticket && String(ticket).startsWith('mock-')) {
+        console.log('Mock mode detected, not connecting to VNC')
+        setIsDemoMode(true)
+        setError('이 기능은 데모 모드에서 사용할 수 없습니다.')
+        setConnecting(false)
+        return
+      }
+      
+      console.log('Attempting real VNC connection...')
 
       // Connect to VNC via WebSocket
       const wsUrl = `wss://${host}:${port}/?vncticket=${encodeURIComponent(ticket)}`
@@ -114,11 +128,35 @@ export default function VMConsole() {
       {/* Console Area */}
       <main className="flex-1 flex items-center justify-center p-4">
         {error ? (
-          <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">연결 오류</h3>
-            <p className="text-gray-400 mb-4">{error}</p>
-            <Button onClick={connectToConsole}>다시 연결</Button>
+          <div className="text-center max-w-md">
+            {isDemoMode ? (
+              <>
+                <Info className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">데모 모드</h3>
+                <p className="text-gray-400 mb-4">{error}</p>
+                <div className="bg-gray-800 rounded-lg p-4 text-left text-sm text-gray-300 mb-4">
+                  <p className="mb-2">VNC 콘솔은 실제 Proxmox 서버에 연결되어 있을 때만 사용할 수 있습니다.</p>
+                  <p className="mb-2">현재는 데모 모드로 실행 중이며, 다음 기능들을 테스트할 수 있습니다:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>VM 목록 조회</li>
+                    <li>VM 시작/정지 (시뮬레이션)</li>
+                    <li>관리자 패널</li>
+                    <li>사용자 생성 및 VM 할당</li>
+                  </ul>
+                </div>
+                <Button onClick={() => navigate('/dashboard')}>대시보드로 돌아가기</Button>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">연결 오류</h3>
+                <p className="text-gray-400 mb-4">{error}</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={connectToConsole}>다시 연결</Button>
+                  <Button variant="outline" onClick={() => navigate('/dashboard')}>대시보드로</Button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
