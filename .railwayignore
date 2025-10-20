@@ -1,5 +1,6 @@
 # Railway에서 무시할 파일/폴더
-client/
+# client/ 폴더는 빌드에 필요하므로 포함
+client/node_modules/
 *.md
 !README.md
 setup.sh
