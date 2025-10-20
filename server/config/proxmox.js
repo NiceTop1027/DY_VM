@@ -29,7 +29,11 @@ class ProxmoxAPI {
         },
         { 
           httpsAgent: this.httpsAgent,
-          timeout: 30000 // 30 second timeout for Cloudflare Tunnel
+          timeout: 60000, // 60 second timeout for Cloudflare Tunnel
+          headers: {
+            'Connection': 'keep-alive',
+            'Keep-Alive': 'timeout=60'
+          }
         }
       );
 
