@@ -1,6 +1,10 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import proxmox from '../config/proxmox.js';
+import proxmoxReal from '../config/proxmox.js';
+import proxmoxMock from '../config/proxmox-mock.js';
+
+// Use mock Proxmox if PROXMOX_MOCK=true
+const proxmox = process.env.PROXMOX_MOCK === 'true' ? proxmoxMock : proxmoxReal;
 
 const router = express.Router();
 
