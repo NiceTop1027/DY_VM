@@ -3,10 +3,13 @@ import { authenticateToken } from '../middleware/auth.js';
 import proxmoxReal from '../config/proxmox.js';
 import proxmoxMock from '../config/proxmox-mock.js';
 
-// Use mock Proxmox if PROXMOX_MOCK=true
-const proxmox = process.env.PROXMOX_MOCK === 'true' ? proxmoxMock : proxmoxReal;
-
 const router = express.Router();
+
+// Get proxmox instance dynamically based on environment variable
+function getProxmox() {
+  const useMock = process.env.PROXMOX_MOCK === 'true' || process.env.PROXMOX_MOCK === true;
+  return useMock ? proxmoxMock : proxmoxReal;
+}
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -26,6 +29,7 @@ router.get('/', async (req, res) => {
     }
     
     console.log(`Fetching VMs from Proxmox node: ${node}`);
+    const proxmox = getProxmox();
     const allVMs = await proxmox.getVMs(node);
     console.log(`Retrieved ${allVMs?.length || 0} VMs from Proxmox`);
     
@@ -58,6 +62,7 @@ router.get('/:vmid', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
     const { vmid } = req.params;
+    const proxmox = getProxmox();
     const vm = await proxmox.getVM(node, vmid);
     res.json(vm);
   } catch (error) {
@@ -70,6 +75,7 @@ router.post('/:vmid/start', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
     const { vmid } = req.params;
+    const proxmox = getProxmox();
     const result = await proxmox.startVM(node, vmid);
     res.json({ message: 'VM started', result });
   } catch (error) {
@@ -82,6 +88,7 @@ router.post('/:vmid/stop', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
     const { vmid } = req.params;
+    const proxmox = getProxmox();
     const result = await proxmox.stopVM(node, vmid);
     res.json({ message: 'VM stopped', result });
   } catch (error) {
@@ -94,6 +101,7 @@ router.post('/:vmid/shutdown', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
     const { vmid } = req.params;
+    const proxmox = getProxmox();
     const result = await proxmox.shutdownVM(node, vmid);
     res.json({ message: 'VM shutdown initiated', result });
   } catch (error) {
@@ -106,6 +114,7 @@ router.get('/:vmid/vnc', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
     const { vmid } = req.params;
+    const proxmox = getProxmox();
     const vncInfo = await proxmox.getVNCWebSocket(node, vmid);
     
     res.json({

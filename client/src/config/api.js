@@ -1,5 +1,5 @@
 // API 기본 URL 설정
-// 프로덕션에서는 같은 도메인을 사용하므로 빈 문자열, 개발에서는 프록시 사용
+// 프로덕션에서는 환경 변수로 설정된 백엔드 URL 사용, 개발에서는 프록시 사용
 export const API_URL = import.meta.env.VITE_API_URL || ''
 
 // API 엔드포인트

@@ -10,8 +10,7 @@ import {
 
 const router = express.Router();
 
-// 서버 시작 시 초기 계정 생성
-initializePredefinedAccounts(bcrypt).catch(console.error);
+// 초기 계정 생성은 index.js에서 호출됨 (환경 변수 로드 후)
 
 // Register
 router.post('/register', async (req, res) => {

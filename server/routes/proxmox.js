@@ -3,10 +3,13 @@ import { authenticateToken } from '../middleware/auth.js';
 import proxmoxReal from '../config/proxmox.js';
 import proxmoxMock from '../config/proxmox-mock.js';
 
-// Use mock Proxmox if PROXMOX_MOCK=true
-const proxmox = process.env.PROXMOX_MOCK === 'true' ? proxmoxMock : proxmoxReal;
-
 const router = express.Router();
+
+// Get proxmox instance dynamically based on environment variable
+function getProxmox() {
+  const useMock = process.env.PROXMOX_MOCK === 'true' || process.env.PROXMOX_MOCK === true;
+  return useMock ? proxmoxMock : proxmoxReal;
+}
 
 router.use(authenticateToken);
 
@@ -14,6 +17,7 @@ router.use(authenticateToken);
 router.get('/resources', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
+    const proxmox = getProxmox();
     const resources = await proxmox.getNodeResources(node);
     res.json(resources);
   } catch (error) {
@@ -25,6 +29,7 @@ router.get('/resources', async (req, res) => {
 router.get('/storages', async (req, res) => {
   try {
     const node = process.env.PROXMOX_NODE;
+    const proxmox = getProxmox();
     const storages = await proxmox.getStorages(node);
     res.json(storages);
   } catch (error) {

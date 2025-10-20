@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import { initializePredefinedAccounts } from './models/User.js';
 import authRoutes from './routes/auth.js';
 import vmRoutes from './routes/vm.js';
 import proxmoxRoutes from './routes/proxmox.js';
@@ -11,7 +13,22 @@ import adminRoutes from './routes/admin.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// Load .env from project root
+const envPath = path.join(__dirname, '../.env');
+console.log(`Loading .env from: ${envPath}`);
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+} else {
+  console.log('✅ .env file loaded successfully');
+  console.log(`PROXMOX_MOCK=${process.env.PROXMOX_MOCK}`);
+  console.log(`PROXMOX_HOST=${process.env.PROXMOX_HOST}`);
+  console.log(`ADMIN_EMAIL=${process.env.ADMIN_EMAIL}`);
+}
+
+// 환경 변수 로드 후 초기 계정 생성
+initializePredefinedAccounts(bcrypt).catch(console.error);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
