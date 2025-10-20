@@ -20,9 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
     "axios": "^1.6.2",
-    "https": "^1.0.0",
-    "ws": "^8.14.2",
-    "node-fetch": "^3.3.2"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
