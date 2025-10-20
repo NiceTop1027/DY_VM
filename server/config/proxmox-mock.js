@@ -111,4 +111,17 @@ class ProxmoxMockAPI {
   }
 }
 
-export default new ProxmoxMockAPI();
+// Lazy initialization using Proxy
+let mockInstance = null;
+
+const mockProxy = new Proxy({}, {
+  get(target, prop) {
+    if (!mockInstance) {
+      console.log('[ProxmoxMockAPI] Creating instance (lazy initialization)');
+      mockInstance = new ProxmoxMockAPI();
+    }
+    return mockInstance[prop];
+  }
+});
+
+export default mockProxy;

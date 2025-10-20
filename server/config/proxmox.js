@@ -6,11 +6,15 @@ class ProxmoxAPI {
     this.host = process.env.PROXMOX_HOST;
     this.port = process.env.PROXMOX_PORT || 8006;
     
+    console.log(`[ProxmoxAPI] Constructor - PROXMOX_HOST: ${this.host}, PORT: ${this.port}`);
+    
     // ngrok URL은 포트 없이 사용
     const isNgrok = this.host && this.host.includes('ngrok');
     this.baseURL = isNgrok 
       ? `https://${this.host}/api2/json`
       : `https://${this.host}:${this.port}/api2/json`;
+    
+    console.log(`[ProxmoxAPI] Base URL: ${this.baseURL}, isNgrok: ${isNgrok}`);
     
     this.ticket = null;
     this.csrfToken = null;
@@ -163,4 +167,17 @@ class ProxmoxAPI {
   }
 }
 
-export default new ProxmoxAPI();
+// Lazy initialization using Proxy
+let proxmoxInstance = null;
+
+const proxmoxProxy = new Proxy({}, {
+  get(target, prop) {
+    if (!proxmoxInstance) {
+      console.log('[ProxmoxAPI] Creating instance (lazy initialization)');
+      proxmoxInstance = new ProxmoxAPI();
+    }
+    return proxmoxInstance[prop];
+  }
+});
+
+export default proxmoxProxy;
