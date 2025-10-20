@@ -19,6 +19,7 @@ class ProxmoxAPI {
     try {
       console.log(`Authenticating to Proxmox: ${this.host}:${this.port}`);
       console.log(`Using user: ${process.env.PROXMOX_USER}`);
+      console.log(`Base URL: ${this.baseURL}`);
       
       const response = await axios.post(
         `${this.baseURL}/access/ticket`,
@@ -26,7 +27,10 @@ class ProxmoxAPI {
           username: process.env.PROXMOX_USER,
           password: process.env.PROXMOX_PASSWORD
         },
-        { httpsAgent: this.httpsAgent }
+        { 
+          httpsAgent: this.httpsAgent,
+          timeout: 10000 // 10 second timeout
+        }
       );
 
       this.ticket = response.data.data.ticket;
@@ -35,12 +39,31 @@ class ProxmoxAPI {
       console.log('✅ Proxmox authentication successful');
       return true;
     } catch (error) {
-      console.error('❌ Proxmox authentication failed:', error.message);
+      console.error('❌ Proxmox authentication failed');
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
       if (error.response) {
         console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        console.error('Response data:', JSON.stringify(error.response.data));
+      } else if (error.request) {
+        console.error('No response received from Proxmox server');
+        console.error('Request details:', error.request._header || 'N/A');
       }
-      throw new Error(`Proxmox authentication failed: ${error.message}`);
+      
+      // 더 구체적인 에러 메시지
+      let errorMessage = 'Proxmox authentication failed';
+      if (error.code === 'ECONNREFUSED') {
+        errorMessage = `Cannot connect to Proxmox server at ${this.host}:${this.port}`;
+      } else if (error.code === 'ETIMEDOUT') {
+        errorMessage = `Connection to Proxmox server timed out`;
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = `Proxmox server hostname not found: ${this.host}`;
+      } else if (error.response?.status === 401) {
+        errorMessage = `Invalid Proxmox credentials`;
+      }
+      
+      throw new Error(`${errorMessage}: ${error.message}`);
     }
   }
 
